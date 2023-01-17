@@ -4,7 +4,7 @@ class Ship(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups) # 1. we have to init the parent class
 
-        self.image = pygame.image.load(".../graphics/ship.png").convert_alpha() #2 We need a surface -> image
+        self.image = pygame.image.load("./Space-Shooter/graphics/ship.png").convert_alpha() #2 We need a surface -> image
 
         self.rect = self.image.get_rect(center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2)) # 3 We need a rect
     
@@ -46,9 +46,12 @@ class Laser(pygame.sprite.Sprite):
     def __init__(self, pos, groups):
         super().__init__(groups)
 
-        self.image = pygame.image.load(".../graphics/laser.png").convert_alpha()
+        self.image = pygame.image.load("./Space-Shooter/graphics/laser.png").convert_alpha()
 
         self.rect = self.image.get_rect(midbottom = pos)
+
+    def update(self):
+        self.rect.y -= 1
 
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
@@ -57,7 +60,7 @@ pygame.display.set_caption("Space Shooter")
 clock = pygame.time.Clock()
 
 # background
-background_surf = pygame.image.load(".../graphics/background_new.png").convert()
+background_surf = pygame.image.load("./Space-Shooter/graphics/background_new.png").convert()
 
 # sprite groups
 spaceship_group = pygame.sprite.GroupSingle()
@@ -78,12 +81,14 @@ while True:
 
     # delta time
     dt = clock.tick() / 1000
+    print(clock.get_fps())
 
     # background
     display_surface.blit(background_surf, (0,0))
 
     #Update
     spaceship_group.update()
+    laser_group.update()
 
     #graphics
     spaceship_group.draw(display_surface)
