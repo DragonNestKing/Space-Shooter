@@ -1,4 +1,5 @@
 import pygame, sys
+from random import randint, uniform
 
 class Ship(pygame.sprite.Sprite):
     def __init__(self, groups):
@@ -15,7 +16,7 @@ class Ship(pygame.sprite.Sprite):
     def laser_timer(self):
         if not self.can_shoot:
             current_time = pygame.time.get_ticks()
-            if current_time - self.shoot_time > 500:
+            if current_time - self.shoot_time > 100:
                 self.can_shoot = True
 
     def input_position(self):
@@ -25,9 +26,10 @@ class Ship(pygame.sprite.Sprite):
     def laser_shoot(self):
 
         if pygame.mouse.get_pressed()[0] and self.can_shoot:
-            print("shoot laser")
             self.can_shoot = False
             self.shoot_time = pygame.time.get_ticks()
+
+            Laser(self.rect.midtop, laser_group)
 
         
 
@@ -36,7 +38,6 @@ class Ship(pygame.sprite.Sprite):
         self.input_position()
         self.laser_shoot()
         self.laser_timer()
-    
 
 # exercise
 #Create a laser sprite
@@ -50,8 +51,29 @@ class Laser(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect(midbottom = pos)
 
+        # float based position
+        self.pos = pygame.math.Vector2(self.rect.topleft)
+        self.direction = pygame.math.Vector2(0, -1)
+        self.speed = 600
+
     def update(self):
-        self.rect.y -= 1
+        #self.rect.y -= 1
+        self.pos += self.direction * self.speed * dt
+        self.rect.topleft = (round(self.pos.x), round(self.pos.y))
+
+class Meteor(pygame.sprite.Sprite):
+    def __init__(self,pos,groups):
+        super().__init__(groups)
+        self.image = pygame.image.load("./Space-Shooter/graphics/meteor_new.png").convert_alpha()
+        self.rect = self.image.get_rect(center = pos)
+
+        self.pos = pygame.math.Vector2(self.rect.topleft)
+        self.direction = pygame.math.Vector2(uniform(-0.5, 0.5), 1)
+        self.speed = randint(400, 600)
+        
+    def update(self):
+        self.pos += self.direction * self.speed * dt
+        self.rect.topleft = (round(self.pos.x), round(self.pos.y))
 
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
@@ -65,10 +87,15 @@ background_surf = pygame.image.load("./Space-Shooter/graphics/background_new.png
 # sprite groups
 spaceship_group = pygame.sprite.GroupSingle()
 laser_group = pygame.sprite.Group()
+meteor_group = pygame.sprite.Group()
 
 # sprite creation
 ship = Ship(spaceship_group)
-laser = Laser((100, 300), laser_group)
+
+# timer
+
+meteor_timer = pygame.event.custom_type()
+pygame.time.set_timer(meteor_timer, 400)
 
 
 # main game loop
@@ -78,10 +105,13 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        elif event.type == meteor_timer:
+            meteor_y_pos = randint(-150, -50)
+            meteor_x_pos = randint(-100, WINDOW_WIDTH + 100)
+            Meteor((meteor_x_pos, meteor_y_pos), groups = meteor_group)
 
     # delta time
     dt = clock.tick() / 1000
-    print(clock.get_fps())
 
     # background
     display_surface.blit(background_surf, (0,0))
@@ -89,12 +119,11 @@ while True:
     #Update
     spaceship_group.update()
     laser_group.update()
+    meteor_group.update()
 
     #graphics
     spaceship_group.draw(display_surface)
     laser_group.draw(display_surface)
-    
-
-
+    meteor_group.draw(display_surface)
 
     pygame.display.update()
