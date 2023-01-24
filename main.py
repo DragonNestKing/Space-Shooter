@@ -16,7 +16,7 @@ class Ship(pygame.sprite.Sprite):
         self.shoot_time = None
 
         #sound
-        self.laser_sound = pygame.mixer.Sound("./Space-Shooter/sounds/laser.ogg")
+        
 
     def laser_timer(self):
         if not self.can_shoot:
@@ -35,7 +35,6 @@ class Ship(pygame.sprite.Sprite):
             self.shoot_time = pygame.time.get_ticks()
 
             Laser(self.rect.midtop, laser_group)
-            self.laser_sound.play()
 
         
     def meteor_collision(self):
