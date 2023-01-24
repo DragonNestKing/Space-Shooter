@@ -8,10 +8,15 @@ class Ship(pygame.sprite.Sprite):
         self.image = pygame.image.load("./Space-Shooter/graphics/ship.png").convert_alpha() #2 We need a surface -> image
 
         self.rect = self.image.get_rect(center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2)) # 3 We need a rect
+
+        self.mask = pygame.mask.from_surface(self.image)
     
         # timer
         self.can_shoot = True
         self.shoot_time = None
+
+        #sound
+        self.laser_sound = pygame.mixer.Sound("./Space-Shooter/sounds/laser.ogg")
 
     def laser_timer(self):
         if not self.can_shoot:
@@ -30,14 +35,20 @@ class Ship(pygame.sprite.Sprite):
             self.shoot_time = pygame.time.get_ticks()
 
             Laser(self.rect.midtop, laser_group)
+            self.laser_sound.play()
 
         
-
+    def meteor_collision(self):
+        if pygame.sprite.spritecollide(self, meteor_group, False, pygame.sprite.collide_mask):
+            pygame.quit()
+            sys.exit()
 
     def update(self):
         self.input_position()
         self.laser_shoot()
         self.laser_timer()
+
+        self.meteor_collision()
 
 # exercise
 #Create a laser sprite
@@ -51,21 +62,33 @@ class Laser(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect(midbottom = pos)
 
+        self.mask = pygame.mask.from_surface(self.image)
+
         # float based position
         self.pos = pygame.math.Vector2(self.rect.topleft)
         self.direction = pygame.math.Vector2(0, -1)
         self.speed = 600
 
+    def meteor_collision(self):
+        if pygame.sprite.spritecollide(self, meteor_group, True, pygame.sprite.collide_mask):
+            self.kill()
+
     def update(self):
         #self.rect.y -= 1
         self.pos += self.direction * self.speed * dt
         self.rect.topleft = (round(self.pos.x), round(self.pos.y))
+        if self.rect.bottom < 0:
+            self.kill()
+        self.meteor_collision()
 
 class Meteor(pygame.sprite.Sprite):
     def __init__(self,pos,groups):
         super().__init__(groups)
         self.image = pygame.image.load("./Space-Shooter/graphics/meteor_new.png").convert_alpha()
+
         self.rect = self.image.get_rect(center = pos)
+
+        self.mask = pygame.mask.from_surface(self.image)
 
         self.pos = pygame.math.Vector2(self.rect.topleft)
         self.direction = pygame.math.Vector2(uniform(-0.5, 0.5), 1)
@@ -74,6 +97,9 @@ class Meteor(pygame.sprite.Sprite):
     def update(self):
         self.pos += self.direction * self.speed * dt
         self.rect.topleft = (round(self.pos.x), round(self.pos.y))
+
+        if self.rect.bottom > WINDOW_HEIGHT:
+            self.kill()
 
 class Score:
     def __init__(self):
@@ -92,7 +118,6 @@ class Score:
             width = 8,
             border_radius = 5
         )
-
 
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
